@@ -45,7 +45,7 @@ import numpy as np
 import pyvista as pv
 from tqdm import tqdm
 
-from movie_geodesics_yt import (
+from data_utils import (
     load_grmhd_density,
     interpolate_to_cartesian,
     load_geodesics,

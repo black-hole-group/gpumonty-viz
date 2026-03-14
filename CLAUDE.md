@@ -72,11 +72,13 @@ Python scripts:
 
 ### Script Roles
 
-**`movie_geodesics_yt.py`** (yt backend): Volume-renders GRMHD density with geodesic overlays. Exports shared functions (`load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`, `bl_to_cartesian`) that `movie_follow.py` imports.
+**`data_utils.py`** (library only): Pure NumPy/scipy/h5py data utilities — no yt dependency. Provides `bl_to_cartesian`, `mks_to_bl`, `load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`. Imported by all scripts and the notebook.
+
+**`movie_geodesics_yt.py`** (yt backend): Volume-renders GRMHD density with geodesic overlays. Imports data functions from `data_utils.py`; adds yt-specific scene building and rendering.
 
 **`plot_geodesics_pv.py`** (PyVista, library only): Helper module — not run standalone. Provides `rho_to_pyvista_grid`, `geodesics_to_polydata`, `make_bh_sphere`, `build_pv_plotter`. Imported by `movie_follow.py` and `interactive_camera_pv.ipynb`.
 
-**`movie_follow.py`** (PyVista): Camera rides a chosen geodesic; imports data-loading from `movie_geodesics_yt.py` and scene-building from `plot_geodesics_pv.py`. Uses `pv.Plotter(off_screen=True)` + `plotter.screenshot()` per frame.
+**`movie_follow.py`** (PyVista): Camera rides a chosen geodesic; imports data-loading from `data_utils.py` and scene-building from `plot_geodesics_pv.py`. Uses `pv.Plotter(off_screen=True)` + `plotter.screenshot()` per frame.
 
 **`interactive_camera_pv.ipynb`** (PyVista/trame): Jupyter notebook for interactive camera preview. Requires `pyvista[jupyter]` and `trame`.
 
