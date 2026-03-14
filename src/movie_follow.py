@@ -24,7 +24,7 @@ Arguments:
     --output PATH       Output video path (default: geodesics_movie.mp4)
     --no-video          Generate frames only, skip ffmpeg assembly
     --horizon-alpha A   Horizon sphere alpha 0–1 (0=invisible, 1=opaque; default: 1.0)
-    --opacity-multiplier M  Volume opacity multiplier (default: 2)
+    --opacity-multiplier M  Volume opacity multiplier (default: 100)
     --no-density        Skip volume rendering of density
     --window-size N     Frame resolution in pixels (default: 1024)
     --pv-log PATH       Log file for PyVista/VTK output (default: pyvista_warnings.log)
@@ -261,8 +261,8 @@ def main():
                         help="Generate frames only, skip ffmpeg assembly")
     parser.add_argument("--horizon-alpha", type=float, default=1.0,
                         help="Horizon sphere opacity (0=invisible, 1=opaque, default: 1.0)")
-    parser.add_argument("--opacity-multiplier", type=float, default=2.0,
-                        help="Volume opacity multiplier (default: 2.0)")
+    parser.add_argument("--opacity-multiplier", type=float, default=100.0,
+                        help="Volume opacity multiplier (default: 100.0)")
     parser.add_argument("--no-density", action="store_true",
                         help="Skip volume rendering of density")
     parser.add_argument("--window-size", type=int, default=1024,
