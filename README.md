@@ -6,9 +6,13 @@ Visualization tools for photon geodesic trajectories in Kerr spacetime, with opt
 
 ## Quick Start
 
-(1) Go to GPUmonty’s `track` branch:
+(1) Go to GPUmonty’s `track` branch and compile:
 
-    git checkout track
+```bash
+cd gpumonty
+git checkout track
+make -j <ncores>
+```
 
 (2) Generate geodesics with GPUmonty by adding to your `.par` file:
 
@@ -20,15 +24,16 @@ trace_maxsteps    10000
 trace_output      geodesics.h5
 ```
 
+(3) Run the code to produce an HDF5 file w/ geodesic tracks:
+
+```bash
+./gpumonty -par track.par
+```
+
+
 (3) Visualize:
 
 ```bash
-# Interactive 3D viewer (Plotly)
-python src/plot_geodesics.py output/geodesics.h5 --n 100
-
-# Volume render density + geodesic overlay → PNG (yt)
-python src/plot_geodesics_yt.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50
-
 # Movie: geodesics building up step-by-step → MP4 (yt + ffmpeg)
 python src/movie_geodesics_yt.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --n-frames 100
 
@@ -43,8 +48,6 @@ jupyter notebook src/interactive_camera_pv.ipynb
 
 | Script | Backend | Description |
 |--------|---------|-------------|
-| `plot_geodesics.py` | Plotly | Interactive 3D viewer of photon trajectories |
-| `plot_geodesics_yt.py` | yt | Volume render of GRMHD density + geodesic overlay (static PNG) |
 | `plot_geodesics_pv.py` | PyVista | Helper module: grid builder, geodesic polylines, BH sphere, plotter assembly |
 | `movie_geodesics_yt.py` | yt | Movie of geodesics building up step-by-step; assembles MP4 via ffmpeg |
 | `movie_follow.py` | PyVista | Camera-follows-geodesic movie with off-screen rendering |
@@ -64,40 +67,6 @@ All scripts live in `src/`.
 | `ffmpeg` (external) | `movie_geodesics_yt.py`, `movie_follow.py` |
 
 ## CLI Reference
-
-### `plot_geodesics.py` — Interactive 3D Viewer
-
-```
-python src/plot_geodesics.py [geodesics.h5] [options]
-```
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `h5file` | `output/geodesics.h5` | Path to geodesic HDF5 file |
-| `--n N` | 50 | Number of geodesics to plot (randomly sampled) |
-| `--no-bh` | — | Skip drawing the black hole horizon sphere |
-| `--cam-dist D` | 5 | Initial camera distance from origin in r_g |
-
-Trajectories are drawn as fluorescent cyan lines on a dark background. An opaque black sphere at r = 1 r_g marks the event horizon.
-
-### `plot_geodesics_yt.py` — Density + Geodesic Volume Render
-
-```
-python src/plot_geodesics_yt.py [dump] [options]
-```
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `dump` | `data/dump_SANE.h5` | GRMHD HDF5 dump file |
-| `--geodesics PATH` | `output/geodesics.h5` | Geodesic trajectory file |
-| `--n N` | 50 | Number of geodesics to plot |
-| `--r-max R` | 50.0 | Max radius for visualization clipping (r_g) |
-| `--resolution N` | 256 | Cartesian grid resolution per axis |
-| `--no-geodesics` | — | Render density only |
-| `--output PATH` | `geodesics_yt.png` | Output image path |
-| `--cam-position X Y Z` | `(2*r_max, 0, 0)` | Camera position in r_g |
-
-The density is read on its native MKS grid, interpolated to a uniform Cartesian grid via `scipy.ndimage.map_coordinates`, loaded into yt, and volume-rendered. Geodesics are overlaid as `LineSource` objects.
 
 ### `movie_geodesics_yt.py` — Geodesic Evolution Movie
 
