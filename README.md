@@ -6,7 +6,11 @@ Visualization tools for photon geodesic trajectories in Kerr spacetime, with opt
 
 ## Quick Start
 
-Generate geodesics with GPUmonty by adding to your `.par` file:
+(1) Go to GPUmonty’s `track` branch:
+
+    git checkout track
+
+(2) Generate geodesics with GPUmonty by adding to your `.par` file:
 
 ```
 Ns                1000
@@ -16,7 +20,7 @@ trace_maxsteps    10000
 trace_output      geodesics.h5
 ```
 
-Then visualize:
+(3) Visualize:
 
 ```bash
 # Interactive 3D viewer (Plotly)
