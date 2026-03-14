@@ -13,7 +13,7 @@ Jupyter interactive backend requires trame:
 import numpy as np
 import pyvista as pv
 
-from plot_geodesics_yt import bl_to_cartesian
+from movie_geodesics_yt import bl_to_cartesian
 
 
 # ---------------------------------------------------------------------------
