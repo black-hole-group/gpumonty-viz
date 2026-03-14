@@ -6,15 +6,15 @@ Visualization tools for photon geodesic trajectories in Kerr spacetime, with opt
 
 ## Quick Start
 
-(1) Go to GPUmonty’s `track` branch and compile:
+(1) Go to GPUmonty's directory, switch to the `track` branch and compile:
 
 ```bash
 cd gpumonty
 git checkout track
-make -j <ncores>
+make -j <# of CPU cores>
 ```
 
-(2) Generate geodesics with GPUmonty by adding to your `.par` file:
+(2) Add to the `.par` parameter file:
 
 ```
 Ns                1000
@@ -24,14 +24,21 @@ trace_maxsteps    10000
 trace_output      geodesics.h5
 ```
 
+| Parameter | Description |
+|-----------|-------------|
+| `Ns` | Number of photons (superphotons) to sample |
+| `trace_geodesics` | Enable geodesic trajectory recording |
+| `trace_stride` | Save photon position every N integration steps |
+| `trace_maxsteps` | Maximum integration steps per photon |
+| `trace_output` | Output HDF5 file for geodesic tracks |
+
 (3) Run the code to produce an HDF5 file w/ geodesic tracks:
 
 ```bash
 ./gpumonty -par track.par
 ```
 
-
-(3) Visualize:
+(4) Visualize:
 
 ```bash
 # Movie: geodesics building up step-by-step → MP4 (PyVista + ffmpeg)
@@ -135,7 +142,6 @@ ffmpeg -y -framerate 30 -i frames/frame_%04d.png \
 
 - **Coordinate pipeline**: MKS → Boyer-Lindquist → Cartesian. The MKS theta inversion uses a monotonic lookup table (`np.searchsorted` on the theta equation).
 - **Single rendering backend**: PyVista/VTK handles all visualization (volume rendering, geodesic tubes, interactive exploration, camera-following).
-- **Progressive revelation**: Movie scripts truncate geodesics at increasing step numbers, creating a dramatic build-up of photon paths.
 - **Off-screen rendering**: PyVista scripts use `pv.Plotter(off_screen=True)` + `plotter.screenshot()` for headless batch frame generation.
 - **`plot_geodesics_pv.py` is a library**: Imported by `movie_follow.py` and `interactive_camera_pv.ipynb`; not run standalone.
 - **Shared data utilities in `data_utils.py`**: All scripts import `load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`, and `bl_to_cartesian` from here.
