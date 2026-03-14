@@ -23,6 +23,7 @@ Arguments:
     --opacity-multiplier M  Volume opacity multiplier (default: 100)
     --no-density            Skip volume rendering of density
     --window-size N         Frame resolution in pixels (default: 1024)
+    --tube-radius R         Base geodesic tube radius in r_g (default: 0.07; gold is 2x)
     --pv-log PATH           Log file for PyVista/VTK output (default: pyvista_warnings.log)
     --slow-frame-threshold  Stop if a frame exceeds this many seconds (default: 8.0)
 
@@ -160,6 +161,8 @@ def main():
                         help="Frame resolution in pixels (default: 1024)")
     parser.add_argument("--pv-log", default="pyvista_warnings.log",
                         help="Log file for PyVista/VTK output (default: pyvista_warnings.log)")
+    parser.add_argument("--tube-radius", type=float, default=0.07,
+                        help="Base tube radius for geodesic lines in r_g (default: 0.07; gold tubes are 2x this)")
     parser.add_argument("--slow-frame-threshold", type=float, default=8.0, metavar="SECS",
                         help="Stop early if a frame takes longer than this many seconds (default: 8.0)")
     args = parser.parse_args()
@@ -284,10 +287,10 @@ def main():
                                  smooth_shading=True)
 
                 if cyan_lines is not None:
-                    plotter.add_mesh(cyan_lines.tube(radius=0.035), color=CYAN,
+                    plotter.add_mesh(cyan_lines.tube(radius=args.tube_radius), color=CYAN,
                                      opacity=0.7, smooth_shading=True)
                 if gold_lines is not None:
-                    plotter.add_mesh(gold_lines.tube(radius=0.07), color=GOLD,
+                    plotter.add_mesh(gold_lines.tube(radius=2.0 * args.tube_radius), color=GOLD,
                                      opacity=0.95, smooth_shading=True)
 
                 plotter.camera.position    = cam_pos
