@@ -17,6 +17,9 @@ python src/movie_geodesics_yt.py data/dump_SANE.h5 --geodesics output/geodesics.
 # Movie where camera follows a specific photon (PyVista backend)
 python src/movie_follow.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --follow 0 --n 50 --output follow_movie.mp4
 
+# Movie with fixed camera, geodesics progressively build up (PyVista backend)
+python src/movie_static.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --cam-position 80 0 30 --output static_movie.mp4
+
 # Interactive camera exploration
 jupyter notebook src/interactive_camera_pv.ipynb
 ```
