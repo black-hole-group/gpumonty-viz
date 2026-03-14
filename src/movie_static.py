@@ -39,7 +39,6 @@ import argparse
 import contextlib
 import logging
 import os
-import signal
 import sys
 import time
 import numpy as np
@@ -262,57 +261,48 @@ def main():
 
         frame_t0 = time.time()
 
-        def _alarm_handler(signum, frame):
-            raise TimeoutError()
+        with _silence_stderr(args.pv_log):
+            plotter = pv.Plotter(off_screen=True, window_size=[win, win])
+            plotter.set_background("black")
 
-        signal.signal(signal.SIGALRM, _alarm_handler)
-        signal.alarm(int(slow_threshold) + 1)
-        try:
-            with _silence_stderr(args.pv_log):
-                plotter = pv.Plotter(off_screen=True, window_size=[win, win])
-                plotter.set_background("black")
+            if density_render:
+                plotter.add_volume(
+                    grid,
+                    scalars="log_density",
+                    cmap="inferno",
+                    opacity="linear",
+                    opacity_unit_distance=opacity_unit,
+                    clim=[log_min, log_max],
+                    shade=False,
+                )
 
-                if density_render:
-                    plotter.add_volume(
-                        grid,
-                        scalars="log_density",
-                        cmap="inferno",
-                        opacity="linear",
-                        opacity_unit_distance=opacity_unit,
-                        clim=[log_min, log_max],
-                        shade=False,
-                    )
+            plotter.add_mesh(bh_mesh, color="#111118", opacity=args.horizon_alpha,
+                             smooth_shading=True)
 
-                plotter.add_mesh(bh_mesh, color="#111118", opacity=args.horizon_alpha,
-                                 smooth_shading=True)
+            if cyan_lines is not None:
+                plotter.add_mesh(cyan_lines.tube(radius=args.tube_radius), color=CYAN,
+                                 opacity=0.7, smooth_shading=True)
+            if gold_lines is not None:
+                plotter.add_mesh(gold_lines.tube(radius=2.0 * args.tube_radius), color=GOLD,
+                                 opacity=0.95, smooth_shading=True)
 
-                if cyan_lines is not None:
-                    plotter.add_mesh(cyan_lines.tube(radius=args.tube_radius), color=CYAN,
-                                     opacity=0.7, smooth_shading=True)
-                if gold_lines is not None:
-                    plotter.add_mesh(gold_lines.tube(radius=2.0 * args.tube_radius), color=GOLD,
-                                     opacity=0.95, smooth_shading=True)
+            plotter.camera.position    = cam_pos
+            plotter.camera.focal_point = (0.0, 0.0, 0.0)
+            plotter.camera.up          = cam_up
 
-                plotter.camera.position    = cam_pos
-                plotter.camera.focal_point = (0.0, 0.0, 0.0)
-                plotter.camera.up          = cam_up
-
-                plotter.screenshot(frame_path)
-                plotter.close()
-        except TimeoutError:
-            signal.alarm(0)
-            frame_elapsed = time.time() - frame_t0
-            pbar.close()
-            warn_bar.close()
-            print(f"\nWARNING: frame {t} timed out after {frame_elapsed:.1f}s "
-                  f"(threshold={slow_threshold:.1f}s). Stopping early.")
-            stopped_early = True
-            break
-        finally:
-            signal.alarm(0)
+            plotter.screenshot(frame_path)
+            plotter.close()
 
         frame_elapsed = time.time() - frame_t0
         frame_times.append(frame_elapsed)
+
+        if frame_elapsed > slow_threshold:
+            pbar.close()
+            warn_bar.close()
+            print(f"\nWARNING: frame {t} took {frame_elapsed:.1f}s "
+                  f"(threshold={slow_threshold:.1f}s). Stopping early.")
+            stopped_early = True
+            break
 
         pbar.set_postfix({"s/frame": f"{frame_elapsed:.1f}"})
         pbar.update(1)
