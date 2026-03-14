@@ -11,17 +11,8 @@ GPUMonty Visualization Suite — a collection of Python scripts for visualizing 
 No build system. All scripts are run directly:
 
 ```bash
-# Quick interactive 3D visualization (Plotly, no volume rendering)
-python src/plot_geodesics.py output/geodesics.h5 --n 100
-
-# Static image with volume-rendered density (yt backend)
-python src/plot_geodesics_yt.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --output image.png
-
 # Movie: geodesics progressively build up (yt + ffmpeg)
 python src/movie_geodesics_yt.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --n-frames 100 --fps 30
-
-# Parallel movie rendering (distribute frames across CPU cores)
-python src/movie_parallel.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --workers 8
 
 # Movie where camera follows a specific photon (PyVista backend)
 python src/movie_follow.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --follow 0 --n 50 --output follow_movie.mp4
@@ -38,13 +29,21 @@ jupyter notebook src/interactive_camera_pv.ipynb
 - `--fps N`: Video framerate
 - `--output PATH`: Output file path
 
+**Manual ffmpeg assembly** (if using `--no-video`):
+```bash
+ffmpeg -y -framerate 30 -i frames/frame_%04d.png \
+    -c:v libx264 -preset medium -crf 18 \
+    -pix_fmt yuv420p \
+    -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
+    geodesics_movie.mp4
+```
+
 ## Dependencies
 
 ```
 h5py, numpy, scipy, tqdm         # Always required
-yt                                # For *_yt.py scripts
-pyvista                           # For *_pv.py scripts and movie_follow.py
-plotly                            # For plot_geodesics.py
+yt                                # For movie_geodesics_yt.py
+pyvista                           # For plot_geodesics_pv.py, movie_follow.py
 pyvista[jupyter], trame           # For interactive_camera_pv.ipynb
 ffmpeg                            # External, for video assembly
 ```
@@ -68,13 +67,15 @@ Python scripts:
     PNG / MP4 / interactive HTML
 ```
 
-### Two Rendering Backends
+### Script Roles
 
-**yt** (`plot_geodesics_yt.py`, `movie_geodesics_yt.py`, `movie_parallel.py`): Volume-renders the GRMHD density field with geodesic line overlays. Better for static images and straightforward frame sequences.
+**`movie_geodesics_yt.py`** (yt backend): Volume-renders GRMHD density with geodesic overlays. Exports shared functions (`load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`, `bl_to_cartesian`) that `movie_follow.py` imports.
 
-**PyVista/VTK** (`plot_geodesics_pv.py`, `movie_follow.py`, `interactive_camera_pv.ipynb`): Advanced camera control (e.g., camera riding along a photon path). Supports off-screen rendering for batch frame generation. `plot_geodesics_pv.py` is a helper module imported by the others.
+**`plot_geodesics_pv.py`** (PyVista, library only): Helper module — not run standalone. Provides `rho_to_pyvista_grid`, `geodesics_to_polydata`, `make_bh_sphere`, `build_pv_plotter`. Imported by `movie_follow.py` and `interactive_camera_pv.ipynb`.
 
-**Plotly** (`plot_geodesics.py`): Lightweight, no volume rendering. Best for quick interactive inspection of geodesic geometry.
+**`movie_follow.py`** (PyVista): Camera rides a chosen geodesic; imports data-loading from `movie_geodesics_yt.py` and scene-building from `plot_geodesics_pv.py`. Uses `pv.Plotter(off_screen=True)` + `plotter.screenshot()` per frame.
+
+**`interactive_camera_pv.ipynb`** (PyVista/trame): Jupyter notebook for interactive camera preview. Requires `pyvista[jupyter]` and `trame`.
 
 ### Coordinate Systems
 
