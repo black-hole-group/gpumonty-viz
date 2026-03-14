@@ -34,8 +34,8 @@ trace_output      geodesics.h5
 (3) Visualize:
 
 ```bash
-# Movie: geodesics building up step-by-step → MP4 (yt + ffmpeg)
-python src/movie_geodesics_yt.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --n-frames 100
+# Movie: geodesics building up step-by-step → MP4 (PyVista + ffmpeg)
+python src/movie_static.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --n-frames 100
 
 # Camera rides along a photon trajectory → MP4 (PyVista + ffmpeg)
 python src/movie_follow.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --follow 0 --n 50
@@ -49,7 +49,7 @@ jupyter notebook src/interactive_camera_pv.ipynb
 | Script | Backend | Description |
 |--------|---------|-------------|
 | `plot_geodesics_pv.py` | PyVista | Helper module: grid builder, geodesic polylines, BH sphere, plotter assembly |
-| `movie_geodesics_yt.py` | yt | Movie of geodesics building up step-by-step; assembles MP4 via ffmpeg |
+| `movie_static.py` | PyVista | Movie of geodesics building up step-by-step; assembles MP4 via ffmpeg |
 | `movie_follow.py` | PyVista | Camera-follows-geodesic movie with off-screen rendering |
 | `interactive_camera_pv.ipynb` | PyVista/trame | Jupyter notebook for interactive camera exploration |
 
@@ -60,36 +60,11 @@ All scripts live in `src/`.
 | Package | Required by |
 |---------|-------------|
 | `h5py`, `numpy`, `scipy`, `tqdm` | All scripts |
-| `plotly` | `plot_geodesics.py` |
-| `yt` | `plot_geodesics_yt.py`, `movie_geodesics_yt.py` |
-| `pyvista` | `plot_geodesics_pv.py`, `movie_follow.py`, `interactive_camera_pv.ipynb` |
+| `pyvista` | `plot_geodesics_pv.py`, `movie_static.py`, `movie_follow.py`, `interactive_camera_pv.ipynb` |
 | `pyvista[jupyter]`, `trame` | `interactive_camera_pv.ipynb` |
-| `ffmpeg` (external) | `movie_geodesics_yt.py`, `movie_follow.py` |
+| `ffmpeg` (external) | `movie_static.py`, `movie_follow.py` |
 
 ## CLI Reference
-
-### `movie_geodesics_yt.py` — Geodesic Evolution Movie
-
-```
-python src/movie_geodesics_yt.py [dump] [options]
-```
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `dump` | `data/dump_SANE.h5` | GRMHD HDF5 dump file |
-| `--geodesics PATH` | `output/geodesics.h5` | Geodesic trajectory file |
-| `--n N` | 50 | Number of geodesics to plot |
-| `--r-max R` | 50.0 | Max radius (r_g) |
-| `--resolution N` | 256 | Cartesian grid resolution |
-| `--cam-position X Y Z` | `(2*r_max, 0, 0)` | Camera position in r_g |
-| `--n-frames N` | max geodesic steps | Number of output frames |
-| `--fps N` | 30 | Video framerate |
-| `--frame-dir DIR` | `frames/` | Directory for frame PNGs |
-| `--output PATH` | `geodesics_movie.mp4` | Output video path |
-| `--no-video` | — | Generate frames only, skip ffmpeg |
-| `--yt-log PATH` | `yt_warnings.log` | Capture yt output to file |
-
-Each frame truncates geodesics at step t, creating a progressive build-up effect. Output uses `-pix_fmt yuv420p` for macOS QuickTime compatibility.
 
 ### `movie_follow.py` — Camera-Follows-Geodesic Movie
 
@@ -159,8 +134,8 @@ ffmpeg -y -framerate 30 -i frames/frame_%04d.png \
 ## Design Notes
 
 - **Coordinate pipeline**: MKS → Boyer-Lindquist → Cartesian. The MKS theta inversion uses a monotonic lookup table (`np.searchsorted` on the theta equation).
-- **Two rendering backends**: yt provides classical volume rendering with `ColorTransferFunction`; PyVista/VTK enables advanced camera work (following geodesics, interactive exploration).
+- **Single rendering backend**: PyVista/VTK handles all visualization (volume rendering, geodesic tubes, interactive exploration, camera-following).
 - **Progressive revelation**: Movie scripts truncate geodesics at increasing step numbers, creating a dramatic build-up of photon paths.
 - **Off-screen rendering**: PyVista scripts use `pv.Plotter(off_screen=True)` + `plotter.screenshot()` for headless batch frame generation.
 - **`plot_geodesics_pv.py` is a library**: Imported by `movie_follow.py` and `interactive_camera_pv.ipynb`; not run standalone.
-- **`movie_follow.py` imports from `movie_geodesics_yt.py`**: Reuses `load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`, and `bl_to_cartesian`.
+- **Shared data utilities in `data_utils.py`**: All scripts import `load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`, and `bl_to_cartesian` from here.

@@ -35,7 +35,7 @@ What it does:
     chosen geodesic's trajectory, offset perpendicular to the path direction
     so the camera never sits exactly on the photon track. The followed geodesic
     is highlighted in gold; all others are shown in cyan. Geodesics progressively
-    appear as in movie_geodesics_yt.py. Frames are assembled into H.264 MP4.
+    appear as in movie_static.py. Frames are assembled into H.264 MP4.
 """
 
 import argparse

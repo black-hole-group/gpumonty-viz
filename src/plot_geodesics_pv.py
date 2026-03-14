@@ -3,7 +3,7 @@
 PyVista helper functions for interactive 3D visualization of GRMHD density
 and geodesic trajectories.
 
-Imports pure-NumPy data-loading functions from plot_geodesics_yt.py; only the
+Imports pure-NumPy data-loading functions from data_utils.py; only the
 rendering layer is replaced with PyVista (VTK backend).
 
 Jupyter interactive backend requires trame:

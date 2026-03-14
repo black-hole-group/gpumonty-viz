@@ -11,9 +11,6 @@ GPUMonty Visualization Suite — a collection of Python scripts for visualizing 
 No build system. All scripts are run directly:
 
 ```bash
-# Movie: geodesics progressively build up (yt + ffmpeg)
-python src/movie_geodesics_yt.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --n-frames 100 --fps 30
-
 # Movie where camera follows a specific photon (PyVista backend)
 python src/movie_follow.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --follow 0 --n 50 --output follow_movie.mp4
 
@@ -45,7 +42,6 @@ ffmpeg -y -framerate 30 -i frames/frame_%04d.png \
 
 ```
 h5py, numpy, scipy, tqdm         # Always required
-yt                                # For movie_geodesics_yt.py
 pyvista                           # For plot_geodesics_pv.py, movie_follow.py
 pyvista[jupyter], trame           # For interactive_camera_pv.ipynb
 ffmpeg                            # External, for video assembly
@@ -73,8 +69,6 @@ Python scripts:
 ### Script Roles
 
 **`data_utils.py`** (library only): Pure NumPy/scipy/h5py data utilities — no yt dependency. Provides `bl_to_cartesian`, `mks_to_bl`, `load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`. Imported by all scripts and the notebook.
-
-**`movie_geodesics_yt.py`** (yt backend): Volume-renders GRMHD density with geodesic overlays. Imports data functions from `data_utils.py`; adds yt-specific scene building and rendering.
 
 **`plot_geodesics_pv.py`** (PyVista, library only): Helper module — not run standalone. Provides `rho_to_pyvista_grid`, `geodesics_to_polydata`, `make_bh_sphere`, `build_pv_plotter`. Imported by `movie_follow.py` and `interactive_camera_pv.ipynb`.
 
