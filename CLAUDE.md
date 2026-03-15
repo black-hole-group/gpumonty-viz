@@ -17,6 +17,9 @@ python src/movie_follow.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --f
 # Movie with fixed camera, geodesics progressively build up (PyVista backend)
 python src/movie_static.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --cam-position 80 0 30 --output static_movie.mp4
 
+# Camera flies an arc above the midplane (PyVista backend)
+python src/movie_flyby.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50 --elevation 30 --azimuth-sweep 180 --output flyby_movie.mp4
+
 # Interactive camera exploration
 jupyter notebook src/interactive_camera_pv.ipynb
 ```
@@ -42,7 +45,7 @@ ffmpeg -y -framerate 30 -i frames/frame_%04d.png \
 
 ```
 h5py, numpy, scipy, tqdm         # Always required
-pyvista                           # For plot_geodesics_pv.py, movie_follow.py
+pyvista                           # For plot_geodesics_pv.py, movie_follow.py, movie_flyby.py
 pyvista[jupyter], trame           # For interactive_camera_pv.ipynb
 ffmpeg                            # External, for video assembly
 ```
@@ -70,7 +73,7 @@ Python scripts:
 
 **`data_utils.py`** (library only): Pure NumPy/scipy/h5py data utilities — no yt dependency. Provides `bl_to_cartesian`, `mks_to_bl`, `load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`. Imported by all scripts and the notebook.
 
-**`plot_geodesics_pv.py`** (PyVista, library only): Helper module — not run standalone. Provides `rho_to_pyvista_grid`, `geodesics_to_polydata`, `make_bh_sphere`, `build_pv_plotter`. Imported by `movie_follow.py` and `interactive_camera_pv.ipynb`.
+**`plot_geodesics_pv.py`** (PyVista, library only): Helper module — not run standalone. Provides `rho_to_pyvista_grid`, `geodesics_to_polydata`, `make_bh_sphere`, `build_pv_plotter`. Imported by `movie_follow.py`, `movie_flyby.py`, and `interactive_camera_pv.ipynb`.
 
 **`movie_follow.py`** (PyVista): Camera rides a chosen geodesic; imports data-loading from `data_utils.py` and scene-building from `plot_geodesics_pv.py`. Uses `pv.Plotter(off_screen=True)` + `plotter.screenshot()` per frame.
 

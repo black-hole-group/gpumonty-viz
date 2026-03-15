@@ -49,6 +49,9 @@ python src/movie_static.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n
 # Camera rides along a photon trajectory → MP4 (PyVista + ffmpeg)
 python src/movie_follow.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --follow 0 --n 50
 
+# Camera flies an arc above the midplane → MP4 (PyVista + ffmpeg)
+python src/movie_flyby.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50
+
 # Interactive camera exploration (Jupyter + PyVista/trame)
 jupyter notebook src/interactive_camera_pv.ipynb
 ```
@@ -60,6 +63,7 @@ jupyter notebook src/interactive_camera_pv.ipynb
 | `plot_geodesics_pv.py` | PyVista | Helper module: grid builder, geodesic polylines, BH sphere, plotter assembly |
 | `movie_static.py` | PyVista | Movie of geodesics building up step-by-step; assembles MP4 via ffmpeg |
 | `movie_follow.py` | PyVista | Camera-follows-geodesic movie with off-screen rendering |
+| `movie_flyby.py` | PyVista | Flyby camera arc above midplane, always looking at the black hole |
 | `interactive_camera_pv.ipynb` | PyVista/trame | Jupyter notebook for interactive camera exploration |
 
 All scripts live in `src/`.
@@ -69,9 +73,9 @@ All scripts live in `src/`.
 | Package | Required by |
 |---------|-------------|
 | `h5py`, `numpy`, `scipy`, `tqdm` | All scripts |
-| `pyvista` | `plot_geodesics_pv.py`, `movie_static.py`, `movie_follow.py`, `interactive_camera_pv.ipynb` |
+| `pyvista` | `plot_geodesics_pv.py`, `movie_static.py`, `movie_follow.py`, `movie_flyby.py`, `interactive_camera_pv.ipynb` |
 | `pyvista[jupyter]`, `trame` | `interactive_camera_pv.ipynb` |
-| `ffmpeg` (external) | `movie_static.py`, `movie_follow.py` |
+| `ffmpeg` (external) | `movie_static.py`, `movie_follow.py`, `movie_flyby.py` |
 
 ## CLI Reference
 
@@ -104,6 +108,38 @@ python src/movie_follow.py [dump] --follow INDEX [options]
 | `--window-size N` | 1024 | Frame resolution in pixels (square) |
 
 The followed geodesic is highlighted in gold; all others are cyan. The camera offset is computed via cross product of the trajectory tangent and the look-at direction.
+
+### `movie_flyby.py` — Flyby Camera Arc Movie
+
+```
+python src/movie_flyby.py [dump] [options]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `dump` | `data/dump_SANE.h5` | GRMHD HDF5 dump file |
+| `--geodesics PATH` | `output/geodesics.h5` | Geodesic trajectory file |
+| `--elevation DEG` | 30 | Camera elevation above midplane in degrees (clamped 0–89) |
+| `--azimuth-start DEG` | 0 | Starting azimuth in degrees |
+| `--azimuth-sweep DEG` | 180 | Total azimuthal arc in degrees |
+| `--cam-distance R` | 2×r_max | Camera distance from origin (r_g) |
+| `--follow INDEX` | — | Optional: highlight one geodesic in gold |
+| `--n N` | 50 | Number of geodesics to plot |
+| `--r-max R` | 50.0 | Max radius (r_g) |
+| `--resolution N` | 256 | Cartesian grid resolution |
+| `--n-frames N` | max geodesic steps | Number of frames |
+| `--fps N` | 30 | Framerate |
+| `--frame-dir DIR` | `frames/` | Directory for frame PNGs |
+| `--output PATH` | `geodesics_movie.mp4` | Output video path |
+| `--no-video` | — | Frames only |
+| `--horizon-alpha A` | 1.0 | Event horizon sphere opacity (0–1) |
+| `--opacity-multiplier M` | 100.0 | Volume rendering opacity multiplier |
+| `--no-density` | — | Skip density volume rendering |
+| `--window-size N` | 1024 | Frame resolution in pixels (square) |
+| `--tube-radius R` | 0.07 | Base geodesic tube radius in r_g (gold is 2×) |
+| `--slow-frame-threshold SECS` | 8.0 | Stop early if a frame exceeds this many seconds |
+
+The camera sweeps a circular arc at constant distance and elevation above the midplane, always pointing at the origin. Geodesics progressively build up frame-by-frame as in `movie_static.py`.
 
 ## Input Data Formats
 
@@ -145,5 +181,5 @@ ffmpeg -y -framerate 30 -i frames/frame_%04d.png \
 - **Coordinate pipeline**: MKS → Boyer-Lindquist → Cartesian. The MKS theta inversion uses a monotonic lookup table (`np.searchsorted` on the theta equation).
 - **Single rendering backend**: PyVista/VTK handles all visualization (volume rendering, geodesic tubes, interactive exploration, camera-following).
 - **Off-screen rendering**: PyVista scripts use `pv.Plotter(off_screen=True)` + `plotter.screenshot()` for headless batch frame generation.
-- **`plot_geodesics_pv.py` is a library**: Imported by `movie_follow.py` and `interactive_camera_pv.ipynb`; not run standalone.
+- **`plot_geodesics_pv.py` is a library**: Imported by `movie_follow.py`, `movie_flyby.py`, and `interactive_camera_pv.ipynb`; not run standalone.
 - **Shared data utilities in `data_utils.py`**: All scripts import `load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`, and `bl_to_cartesian` from here.
