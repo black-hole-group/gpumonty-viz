@@ -74,6 +74,8 @@ Python scripts:
 
 **`movie_follow.py`** (PyVista): Camera rides a chosen geodesic; imports data-loading from `data_utils.py` and scene-building from `plot_geodesics_pv.py`. Uses `pv.Plotter(off_screen=True)` + `plotter.screenshot()` per frame.
 
+**`movie_flyby.py`** (PyVista): Camera flies along a smooth circular arc at constant elevation above the midplane, always pointing at the black hole. Configurable via `--elevation`, `--azimuth-start`, `--azimuth-sweep`, `--cam-distance`. Geodesics progressively build up as in `movie_static.py`. Optional `--follow` highlights one geodesic in gold.
+
 **`interactive_camera_pv.ipynb`** (PyVista/trame): Jupyter notebook for interactive camera preview. Requires `pyvista[jupyter]` and `trame`.
 
 ### Coordinate Systems
