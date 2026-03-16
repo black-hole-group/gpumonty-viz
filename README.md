@@ -2,6 +2,12 @@
 
 Visualization tools for photon geodesic trajectories in Kerr spacetime, with optional GRMHD density field overlays. Post-processes output from [GPUmonty](https://github.com/black-hole-group/gpumonty), a CUDA-based Monte Carlo radiative transfer code for black hole accretion flows.
 
+<p align="center">
+  <a href="https://github.com/rsnemmen/rsnemmen.github.io/blob/26e5262260605c88a68d6a8f7fb17b7973bb3e5b/assets/video/movie_200_near-ezgif.com-video-to-webp-converter.webp">
+    <img src="assets/video/movie_200_near-ezgif.com-video-to-webp-converter.webp" width="500" alt="Demo">
+  </a>
+</p>
+
 ![Demo](https://github.com/rsnemmen/rsnemmen.github.io/blob/26e5262260605c88a68d6a8f7fb17b7973bb3e5b/assets/video/movie_200_near-ezgif.com-video-to-webp-converter.webp)
 **Figure 1:** Null geodesics generation and propagation from a hot accretion flow around a Kerr black hole.
 
