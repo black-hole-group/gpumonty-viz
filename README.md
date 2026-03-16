@@ -1,15 +1,9 @@
-# GPUMonty Visualization Suite
+# GPUmonty Visualization Suite
 
-Visualization tools for photon geodesic trajectories in Kerr spacetime, with optional GRMHD density field overlays. Post-processes output from [GPUmonty](https://github.com/black-hole-group/gpumonty), a CUDA-based Monte Carlo radiative transfer code for black hole accretion flows.
-
-<p align="center">
-  <a href="https://github.com/rsnemmen/rsnemmen.github.io/blob/26e5262260605c88a68d6a8f7fb17b7973bb3e5b/assets/video/movie_200_near-ezgif.com-video-to-webp-converter.webp">
-    <img src="assets/video/movie_200_near-ezgif.com-video-to-webp-converter.webp" width="500" alt="Demo">
-  </a>
-</p>
+Visualization tools for photon geodesic trajectories in Kerr spacetime, with optional GRMHD density field overlays. Post-processes output from [GPUmonty](https://github.com/black-hole-group/gpumonty), a CUDA-based Monte Carlo radiative transfer code for black hole accretion flows. Based on PyVista for rendering and `ffmpeg` for MP4 generation.
 
 ![Demo](https://github.com/rsnemmen/rsnemmen.github.io/blob/26e5262260605c88a68d6a8f7fb17b7973bb3e5b/assets/video/movie_200_near-ezgif.com-video-to-webp-converter.webp)
-**Figure 1:** Null geodesics generation and propagation from a hot accretion flow around a Kerr black hole.
+**Movie 1:** Null geodesics generation and propagation from a hot accretion flow around a Kerr black hole. [SANE GRMHD simulation data obtained here](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/XZECPF).
 
 
 ## Quick Start
@@ -22,7 +16,7 @@ git checkout track
 make -j <# of CPU cores>
 ```
 
-(2) Add to the `.par` parameter file:
+(2) Include in the parameter file (e.g. `track.par` file):
 
 ```
 Ns                1000
@@ -40,25 +34,27 @@ trace_output      geodesics.h5
 | `trace_maxsteps` | Maximum integration steps per photon |
 | `trace_output` | Output HDF5 file for geodesic tracks |
 
-(3) Run the code to produce an HDF5 file w/ geodesic tracks:
+(3) Run gpumonty to produce an HDF5 file with the geodesic tracks:
 
 ```bash
 ./gpumonty -par track.par
 ```
 
-(4) Visualize:
+Let’s assume the file containing the geodesic tracks produced by gpumonty is named `output/geodesics.h5`.
+
+(4) Visualize the geodesics tracks:
 
 ```bash
-# Movie: geodesics building up step-by-step → MP4 (PyVista + ffmpeg)
+# Movie: geodesics building up step-by-step → MP4
 python src/movie_static.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50
 
-# Camera rides along a photon trajectory → MP4 (PyVista + ffmpeg)
-python src/movie_follow.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --follow 0 --n 50
+# Camera rides along photon trajectory "10" → MP4
+python src/movie_follow.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --follow 10 --n 50
 
-# Camera flies an arc above the midplane → MP4 (PyVista + ffmpeg)
+# Camera flies an arc above the midplane → MP4 
 python src/movie_flyby.py data/dump_SANE.h5 --geodesics output/geodesics.h5 --n 50
 
-# Interactive camera exploration (Jupyter + PyVista/trame)
+# Interactive camera exploration (Jupyter)
 jupyter notebook src/interactive_camera_pv.ipynb
 ```
 
@@ -181,11 +177,3 @@ ffmpeg -y -framerate 30 -i frames/frame_%04d.png \
     -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" \
     geodesics_movie.mp4
 ```
-
-## Design Notes
-
-- **Coordinate pipeline**: MKS → Boyer-Lindquist → Cartesian. The MKS theta inversion uses a monotonic lookup table (`np.searchsorted` on the theta equation).
-- **Single rendering backend**: PyVista/VTK handles all visualization (volume rendering, geodesic tubes, interactive exploration, camera-following).
-- **Off-screen rendering**: PyVista scripts use `pv.Plotter(off_screen=True)` + `plotter.screenshot()` for headless batch frame generation.
-- **`plot_geodesics_pv.py` is a library**: Imported by `movie_follow.py`, `movie_flyby.py`, and `interactive_camera_pv.ipynb`; not run standalone.
-- **Shared data utilities in `data_utils.py`**: All scripts import `load_grmhd_density`, `interpolate_to_cartesian`, `load_geodesics`, `assemble_video`, and `bl_to_cartesian` from here.
