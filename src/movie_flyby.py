@@ -206,6 +206,8 @@ def main():
                         help="Volume opacity multiplier (default: 100.0)")
     parser.add_argument("--no-density", action="store_true",
                         help="Skip volume rendering of density")
+    parser.add_argument("--show-legend", action="store_true",
+                        help="Show density color bar legend (default: hidden)")
     parser.add_argument("--window-size", type=int, default=1024,
                         help="Frame resolution in pixels (default: 1024)")
     parser.add_argument("--pv-log", default="pyvista_warnings.log",
@@ -318,6 +320,7 @@ def main():
                     opacity_unit_distance=opacity_unit,
                     clim=[log_min, log_max],
                     shade=False,
+                    show_scalar_bar=args.show_legend,
                 )
 
             plotter.add_mesh(bh_mesh, color="#111118", opacity=args.horizon_alpha,

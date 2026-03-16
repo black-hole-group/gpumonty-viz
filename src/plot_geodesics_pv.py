@@ -236,7 +236,8 @@ def make_bh_sphere(a):
 # ---------------------------------------------------------------------------
 
 def build_pv_plotter(grid, cyan_lines, gold_lines, r_max, grid_params,
-                     cam_position=None, density_render=True, opacity_multiplier=2):
+                     cam_position=None, density_render=True, opacity_multiplier=2,
+                     show_scalar_bar=False):
     """
     Assemble a PyVista Plotter with volume rendering and geodesic overlays.
 
@@ -283,6 +284,7 @@ def build_pv_plotter(grid, cyan_lines, gold_lines, r_max, grid_params,
             opacity_unit_distance=grid.length / (np.mean(grid.dimensions) - 1) * opacity_multiplier,
             clim=[log_min, log_max],
             shade=False,
+            show_scalar_bar=show_scalar_bar,
         )
 
     # --- Geodesic tubes ---
