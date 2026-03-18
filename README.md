@@ -8,6 +8,15 @@ Visualization tools for photon geodesic trajectories in Kerr spacetime, with opt
 
 ## Quick Start
 
+(0) Install [PyVista](https://pyvista.org), the rendering engine:
+
+```shell
+# conda
+conda install -c conda-forge pyvista
+# or pip
+pip install pyvista
+```
+
 (1) Go to GPUmonty's directory, switch to the `track` branch and compile:
 
 ```bash
