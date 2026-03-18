@@ -54,6 +54,7 @@ from data_utils import (
     interpolate_to_cartesian,
     load_geodesics,
     assemble_video,
+    clean_frame_dir,
 )
 from plot_geodesics_pv import (
     rho_to_pyvista_grid,
@@ -277,7 +278,7 @@ def main():
     )
 
     # --- Render frames ---
-    os.makedirs(args.frame_dir, exist_ok=True)
+    clean_frame_dir(args.frame_dir)
     win = args.window_size
     print(f"Rendering {n_frames} frames to {args.frame_dir}/ ...")
     t0 = time.time()

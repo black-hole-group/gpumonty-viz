@@ -4,6 +4,7 @@ Pure-NumPy/scipy/h5py data utilities shared across all visualization scripts.
 No yt dependency — safe to import in PyVista-only scripts and Jupyter notebooks.
 """
 
+import glob
 import os
 import shutil
 import subprocess
@@ -150,6 +151,13 @@ def load_geodesics(h5path, n_plot):
 # ---------------------------------------------------------------------------
 # Video assembly
 # ---------------------------------------------------------------------------
+
+def clean_frame_dir(path):
+    """Remove all PNG files in *path* and ensure the directory exists."""
+    os.makedirs(path, exist_ok=True)
+    for f in glob.glob(os.path.join(path, "*.png")):
+        os.remove(f)
+
 
 def assemble_video(frame_dir, output_video, fps):
     """Assemble PNG frames into an H.264 MP4 via ffmpeg."""
