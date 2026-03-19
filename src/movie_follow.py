@@ -271,8 +271,8 @@ def main():
                         help="Frame resolution in pixels (default: 1024)")
     parser.add_argument("--pv-log", default="pyvista_warnings.log",
                         help="Log file for PyVista/VTK output (default: pyvista_warnings.log)")
-    parser.add_argument("--slow-frame-threshold", type=float, default=8.0, metavar="SECS",
-                        help="Stop early if a frame takes longer than this many seconds (default: 8.0)")
+    parser.add_argument("--slow-frame-threshold", type=float, default=10.0, metavar="SECS",
+                        help="Stop early if a frame takes longer than this many seconds (default: 10.0)")
     args = parser.parse_args()
 
     last_pv_msg = setup_pv_logging(args.pv_log)

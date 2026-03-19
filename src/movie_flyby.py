@@ -28,7 +28,7 @@ Arguments:
     --window-size N         Frame resolution in pixels (default: 1024)
     --tube-radius R         Base geodesic tube radius in r_g (default: 0.07; gold is 2x)
     --pv-log PATH           Log file for PyVista/VTK output (default: pyvista_warnings.log)
-    --slow-frame-threshold  Stop if a frame exceeds this many seconds (default: 8.0)
+    --slow-frame-threshold  Stop if a frame exceeds this many seconds (default: 10.0)
 
 What it does:
     Reads iharm3d GRMHD density on its native MKS grid, interpolates onto a
@@ -215,8 +215,8 @@ def main():
                         help="Log file for PyVista/VTK output (default: pyvista_warnings.log)")
     parser.add_argument("--tube-radius", type=float, default=0.07,
                         help="Base tube radius for geodesic lines in r_g (default: 0.07; gold tubes are 2x this)")
-    parser.add_argument("--slow-frame-threshold", type=float, default=8.0, metavar="SECS",
-                        help="Stop early if a frame takes longer than this many seconds (default: 8.0)")
+    parser.add_argument("--slow-frame-threshold", type=float, default=10.0, metavar="SECS",
+                        help="Stop early if a frame takes longer than this many seconds (default: 10.0)")
     args = parser.parse_args()
 
     last_pv_msg = setup_pv_logging(args.pv_log)
