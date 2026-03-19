@@ -116,6 +116,9 @@ python src/movie_follow.py [dump] --follow INDEX [options]
 | `--horizon-alpha A` | 1.0 | Event horizon sphere opacity (0–1) |
 | `--opacity-multiplier M` | 2.0 | Volume rendering opacity multiplier |
 | `--no-density` | — | Skip density volume rendering |
+| `--look-tangent` | — | Camera looks along geodesic tangent instead of at origin |
+| `--look-distance D` | 10.0 | How far ahead along tangent to place focal point (r_g) |
+| `--fov DEG` | 30.0 | Camera field of view in degrees |
 | `--window-size N` | 1024 | Frame resolution in pixels (square) |
 
 The followed geodesic is highlighted in gold; all others are cyan. The camera offset is computed via cross product of the trajectory tangent and the look-at direction.
