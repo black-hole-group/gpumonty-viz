@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
 Render a movie where the camera rides along a chosen null geodesic (photon
-trajectory), always looking at the black hole, while all geodesics
-progressively build up.
+trajectory), optionally looking at the black hole or along the geodesic's
+tangent direction, while all geodesics progressively build up.
 
 Usage:
     python movie_follow.py [dump] --follow INDEX [options]
@@ -25,6 +25,8 @@ Arguments:
     --no-video          Generate frames only, skip ffmpeg assembly
     --horizon-alpha A   Horizon sphere alpha 0–1 (0=invisible, 1=opaque; default: 1.0)
     --opacity-multiplier M  Volume opacity multiplier (default: 100)
+    --look-tangent      Camera looks along geodesic tangent instead of at origin
+    --look-distance D   How far ahead along tangent to place focal point in r_g (default: 10.0)
     --no-density        Skip volume rendering of density
     --window-size N     Frame resolution in pixels (default: 1024)
     --pv-log PATH       Log file for PyVista/VTK output (default: pyvista_warnings.log)
@@ -130,7 +132,8 @@ def _silence_stderr(log_path):
 # ---------------------------------------------------------------------------
 
 def compute_camera_trajectory(r_all, th_all, ph_all, nsteps, follow_idx,
-                               n_frames, max_step, r_max, r_min, offset_dist):
+                               n_frames, max_step, r_max, r_min, offset_dist,
+                               look_tangent=False, look_distance=10.0):
     """
     Compute camera positions along the followed geodesic for each frame.
 
@@ -151,11 +154,17 @@ def compute_camera_trajectory(r_all, th_all, ph_all, nsteps, follow_idx,
     r_min : float
     offset_dist : float
         Perpendicular offset distance; 0 means no offset.
+    look_tangent : bool
+        If True, focal point is placed ahead along geodesic tangent.
+        If False (default), focal point is always the origin.
+    look_distance : float
+        Distance ahead along tangent for focal point (used when look_tangent=True).
 
     Returns
     -------
-    cam_positions : ndarray, shape (n_frames, 3)
-    cam_steps     : ndarray, shape (n_frames,)  — geodesic step index per frame
+    cam_positions   : ndarray, shape (n_frames, 3)
+    cam_steps       : ndarray, shape (n_frames,)  — geodesic step index per frame
+    cam_focal_points: ndarray, shape (n_frames, 3)
     """
     ns_follow = int(nsteps[follow_idx])
     r_f  = r_all[follow_idx, :ns_follow]
@@ -164,10 +173,12 @@ def compute_camera_trajectory(r_all, th_all, ph_all, nsteps, follow_idx,
     x_f, y_f, z_f = bl_to_cartesian(r_f, th_f, ph_f)
     pts = np.stack([x_f, y_f, z_f], axis=1)  # (ns_follow, 3)
 
-    cam_positions = np.zeros((n_frames, 3))
-    cam_steps     = np.zeros(n_frames, dtype=int)
+    cam_positions    = np.zeros((n_frames, 3))
+    cam_focal_points = np.zeros((n_frames, 3))
+    cam_steps        = np.zeros(n_frames, dtype=int)
 
-    last_valid_pos = pts[0].copy() if ns_follow > 0 else np.array([2.0 * r_max, 0.0, 0.0])
+    last_valid_pos   = pts[0].copy() if ns_follow > 0 else np.array([2.0 * r_max, 0.0, 0.0])
+    last_valid_focal = np.array([0.0, 0.0, 0.0])
 
     for t in range(1, n_frames + 1):
         frame_idx = t - 1
@@ -179,17 +190,22 @@ def compute_camera_trajectory(r_all, th_all, ph_all, nsteps, follow_idx,
         r_gs = r_f[gs]
 
         if r_gs > r_max:
-            cam_positions[frame_idx] = last_valid_pos
+            cam_positions[frame_idx]    = last_valid_pos
+            cam_focal_points[frame_idx] = last_valid_focal
             continue
 
-        if offset_dist > 0 and gs >= 1:
+        # Always compute tangent — needed for both offset and look_tangent
+        if gs >= 1:
             tangent = raw_pos - pts[gs - 1]
             tangent_norm = np.linalg.norm(tangent)
             if tangent_norm > 1e-10:
                 tangent /= tangent_norm
             else:
                 tangent = np.array([1.0, 0.0, 0.0])
+        else:
+            tangent = np.array([1.0, 0.0, 0.0])
 
+        if offset_dist > 0 and gs >= 1:
             look = np.array([0.0, 0.0, 0.0]) - raw_pos
             look_norm = np.linalg.norm(look)
             if look_norm > 1e-10:
@@ -214,10 +230,17 @@ def compute_camera_trajectory(r_all, th_all, ph_all, nsteps, follow_idx,
         if dist < r_min and dist > 1e-10:
             pos = pos * (r_min / dist)
 
-        cam_positions[frame_idx] = pos
-        last_valid_pos = pos
+        if look_tangent:
+            focal = pos + tangent * look_distance
+        else:
+            focal = np.array([0.0, 0.0, 0.0])
 
-    return cam_positions, cam_steps
+        cam_positions[frame_idx]    = pos
+        cam_focal_points[frame_idx] = focal
+        last_valid_pos   = pos
+        last_valid_focal = focal
+
+    return cam_positions, cam_steps, cam_focal_points
 
 
 # ---------------------------------------------------------------------------
@@ -243,6 +266,10 @@ def main():
                         help="Min radius; camera holds position when below (default: 3.0)")
     parser.add_argument("--cam-offset", type=float, default=2.0, metavar="DIST",
                         help="Perpendicular offset from geodesic path in r_g (default: 0.5)")
+    parser.add_argument("--look-tangent", action="store_true",
+                        help="Camera looks along geodesic tangent instead of at the origin")
+    parser.add_argument("--look-distance", type=float, default=10.0, metavar="D",
+                        help="How far ahead along tangent to place focal point in r_g (default: 10.0)")
     parser.add_argument("--adaptive-fov", action="store_true",
                         help="Scale camera width with distance from origin")
     parser.add_argument("--fov-scale", type=float, default=2.0, metavar="K",
@@ -330,9 +357,10 @@ def main():
 
     # --- Compute camera trajectory (once) ---
     print("Computing camera trajectory ...")
-    cam_positions, cam_steps = compute_camera_trajectory(
+    cam_positions, cam_steps, cam_focal_points = compute_camera_trajectory(
         r_all, th_all, ph_all, nsteps, follow_idx,
         n_frames, max_step, r_max, args.r_min, args.cam_offset,
+        look_tangent=args.look_tangent, look_distance=args.look_distance,
     )
 
     # --- Render frames ---
@@ -409,16 +437,29 @@ def main():
                                  opacity=0.95, smooth_shading=True)
 
             # Camera
-            cam_pos = cam_positions[frame_idx]
+            cam_pos   = cam_positions[frame_idx]
+            cam_focal = cam_focal_points[frame_idx]
             plotter.camera.position    = tuple(cam_pos)
-            plotter.camera.focal_point = (0.0, 0.0, 0.0)
+            plotter.camera.focal_point = tuple(cam_focal)
 
-            xy_dist    = np.sqrt(cam_pos[0]**2 + cam_pos[1]**2)
-            total_dist = np.linalg.norm(cam_pos)
-            if total_dist > 0 and xy_dist / total_dist < 0.01:
-                plotter.camera.up = (0.01, 1.0, 0.0)
+            if args.look_tangent:
+                # Choose up-vector that avoids gimbal lock with the view direction
+                view_dir = cam_focal - cam_pos
+                view_norm = np.linalg.norm(view_dir)
+                if view_norm > 1e-10:
+                    view_dir /= view_norm
+                z_up = np.array([0.0, 0.0, 1.0])
+                if abs(np.dot(view_dir, z_up)) > 0.99:
+                    plotter.camera.up = (0.0, 1.0, 0.0)
+                else:
+                    plotter.camera.up = (0.0, 0.0, 1.0)
             else:
-                plotter.camera.up = (0.0, 0.0, 1.0)
+                xy_dist    = np.sqrt(cam_pos[0]**2 + cam_pos[1]**2)
+                total_dist = np.linalg.norm(cam_pos)
+                if total_dist > 0 and xy_dist / total_dist < 0.01:
+                    plotter.camera.up = (0.01, 1.0, 0.0)
+                else:
+                    plotter.camera.up = (0.0, 0.0, 1.0)
 
             plotter.screenshot(frame_path)
             plotter.close()
