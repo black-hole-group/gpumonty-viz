@@ -27,6 +27,7 @@ Arguments:
     --opacity-multiplier M  Volume opacity multiplier (default: 100)
     --look-tangent      Camera looks along geodesic tangent instead of at origin
     --look-distance D   How far ahead along tangent to place focal point in r_g (default: 10.0)
+    --fov DEG           Camera field of view in degrees (default: 30.0)
     --no-density        Skip volume rendering of density
     --window-size N     Frame resolution in pixels (default: 1024)
     --pv-log PATH       Log file for PyVista/VTK output (default: pyvista_warnings.log)
@@ -270,6 +271,8 @@ def main():
                         help="Camera looks along geodesic tangent instead of at the origin")
     parser.add_argument("--look-distance", type=float, default=10.0, metavar="D",
                         help="How far ahead along tangent to place focal point in r_g (default: 10.0)")
+    parser.add_argument("--fov", type=float, default=30.0, metavar="DEG",
+                        help="Camera field of view in degrees (default: 30.0)")
     parser.add_argument("--adaptive-fov", action="store_true",
                         help="Scale camera width with distance from origin")
     parser.add_argument("--fov-scale", type=float, default=2.0, metavar="K",
@@ -461,6 +464,7 @@ def main():
                 else:
                     plotter.camera.up = (0.0, 0.0, 1.0)
 
+            plotter.camera.view_angle = args.fov
             plotter.screenshot(frame_path)
             plotter.close()
 
