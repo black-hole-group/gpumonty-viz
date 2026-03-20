@@ -49,6 +49,7 @@ from data_utils import (
     load_grmhd_density,
     interpolate_to_cartesian,
     load_geodesics,
+    classify_geodesics,
     assemble_video,
     clean_frame_dir,
 )
@@ -167,6 +168,8 @@ def main():
                         help="Base tube radius for geodesic lines in r_g (default: 0.07; gold tubes are 2x this)")
     parser.add_argument("--slow-frame-threshold", type=float, default=10.0, metavar="SECS",
                         help="Stop early if a frame takes longer than this many seconds (default: 10.0)")
+    parser.add_argument("--color-captured", action="store_true",
+                        help="Color captured (horizon-crossing) geodesics in crimson instead of cyan")
     args = parser.parse_args()
 
     last_pv_msg = setup_pv_logging(args.pv_log)
@@ -218,6 +221,14 @@ def main():
     n_frames = args.n_frames if args.n_frames is not None else max_step
     print(f"  {len(idx)} geodesics, max steps = {max_step}, frames = {n_frames}")
 
+    # --- Classify captured vs escaped ---
+    captured_idx = None
+    if args.color_captured:
+        a = grid_params["a"]
+        r_h = 1.0 + np.sqrt(max(0.0, 1.0 - a**2))
+        escaped_idx, captured_idx = classify_geodesics(r_all, nsteps, idx, r_h)
+        print(f"  Captured: {len(captured_idx)}, Escaped: {len(escaped_idx)}")
+
     # --- Fixed camera position ---
     if args.cam_position is not None:
         cam_pos = tuple(args.cam_position)
@@ -239,8 +250,9 @@ def main():
     print(f"Rendering {n_frames} frames to {args.frame_dir}/ ...")
     t0 = time.time()
 
-    CYAN = (0.0, 1.0, 0.88)
-    GOLD = (1.0, 0.85, 0.0)
+    CYAN    = (0.0, 1.0, 0.88)
+    GOLD    = (1.0, 0.85, 0.0)
+    CRIMSON = (0.9, 0.15, 0.15)
 
     pbar = tqdm(total=n_frames, position=0, leave=True,
                 bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
@@ -257,9 +269,9 @@ def main():
         step       = max(1, int(t * max_step / n_frames))
         frame_path = os.path.join(args.frame_dir, f"frame_{t:04d}.png")
 
-        cyan_lines, gold_lines = geodesics_to_polydata_at_step(
+        cyan_lines, gold_lines, cap_lines = geodesics_to_polydata_at_step(
             r_all, th_all, ph_all, nsteps, idx, r_max, step,
-            follow_idx=follow_idx,
+            follow_idx=follow_idx, captured_idx=captured_idx,
         )
 
         frame_t0 = time.time()
@@ -285,6 +297,9 @@ def main():
 
             if cyan_lines is not None:
                 plotter.add_mesh(cyan_lines.tube(radius=args.tube_radius), color=CYAN,
+                                 opacity=0.7, smooth_shading=True)
+            if cap_lines is not None:
+                plotter.add_mesh(cap_lines.tube(radius=args.tube_radius), color=CRIMSON,
                                  opacity=0.7, smooth_shading=True)
             if gold_lines is not None:
                 plotter.add_mesh(gold_lines.tube(radius=2.0 * args.tube_radius), color=GOLD,

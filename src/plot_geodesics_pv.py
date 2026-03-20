@@ -140,7 +140,8 @@ def geodesics_to_polydata(r_all, th_all, ph_all, nsteps, idx, r_max, follow_idx=
 
 
 def geodesics_to_polydata_at_step(r_all, th_all, ph_all, nsteps, idx,
-                                   r_max, step, follow_idx=None):
+                                   r_max, step, follow_idx=None,
+                                   captured_idx=None):
     """
     Like geodesics_to_polydata but truncates each geodesic at min(step, nsteps[i]).
 
@@ -153,11 +154,14 @@ def geodesics_to_polydata_at_step(r_all, th_all, ph_all, nsteps, idx,
     step : int
         Current reveal step; geodesics are clipped to this many points.
     follow_idx : int or None
+    captured_idx : array-like or None
+        If provided, these indices are rendered as a separate (crimson) group.
 
     Returns
     -------
     cyan_lines : pyvista.PolyData or None
     gold_lines : pyvista.PolyData or None
+    captured_lines : pyvista.PolyData or None
     """
     def _build_polydata_at_step(indices):
         all_points = []
@@ -197,17 +201,27 @@ def geodesics_to_polydata_at_step(r_all, th_all, ph_all, nsteps, idx,
 
     idx = np.asarray(idx)
 
+    captured_set = set(captured_idx.tolist()) if captured_idx is not None and len(captured_idx) > 0 else set()
+
     if follow_idx is not None:
-        cyan_idx = idx[idx != follow_idx]
+        remaining = idx[idx != follow_idx]
         gold_idx = np.array([follow_idx])
     else:
-        cyan_idx = idx
+        remaining = idx
         gold_idx = np.array([], dtype=int)
 
-    cyan_lines = _build_polydata_at_step(cyan_idx) if len(cyan_idx) > 0 else None
-    gold_lines = _build_polydata_at_step(gold_idx) if len(gold_idx) > 0 else None
+    if captured_set:
+        cyan_idx = remaining[~np.isin(remaining, list(captured_set))]
+        cap_idx  = remaining[np.isin(remaining, list(captured_set))]
+    else:
+        cyan_idx = remaining
+        cap_idx  = np.array([], dtype=int)
 
-    return cyan_lines, gold_lines
+    cyan_lines     = _build_polydata_at_step(cyan_idx) if len(cyan_idx) > 0 else None
+    gold_lines     = _build_polydata_at_step(gold_idx) if len(gold_idx) > 0 else None
+    captured_lines = _build_polydata_at_step(cap_idx)  if len(cap_idx)  > 0 else None
+
+    return cyan_lines, gold_lines, captured_lines
 
 
 # ---------------------------------------------------------------------------

@@ -402,7 +402,7 @@ def main():
             break
 
         # Build geodesic polydata at current step
-        cyan_lines, gold_lines = geodesics_to_polydata_at_step(
+        cyan_lines, gold_lines, _ = geodesics_to_polydata_at_step(
             r_all, th_all, ph_all, nsteps, idx, r_max, step,
             follow_idx=follow_idx,
         )

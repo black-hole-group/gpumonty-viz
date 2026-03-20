@@ -149,6 +149,39 @@ def load_geodesics(h5path, n_plot):
 
 
 # ---------------------------------------------------------------------------
+# Geodesic classification
+# ---------------------------------------------------------------------------
+
+def classify_geodesics(r_all, nsteps, idx, r_horizon):
+    """
+    Classify geodesic indices into escaped vs captured.
+
+    A photon is captured if its final radius is < 3 * r_horizon (catches both
+    horizon-crossers and near-trapped orbits). Everything else is escaped.
+
+    Parameters
+    ----------
+    r_all : ndarray, shape (nph, max_steps)
+    nsteps : ndarray, shape (nph,)
+    idx : array-like
+        Indices of geodesics to classify.
+    r_horizon : float
+        Event horizon radius r_h = 1 + sqrt(1 - a^2).
+
+    Returns
+    -------
+    escaped_idx : ndarray
+    captured_idx : ndarray
+    """
+    idx = np.asarray(idx)
+    captured_mask = np.array([
+        r_all[i, int(nsteps[i]) - 1] < 3.0 * r_horizon
+        for i in idx
+    ])
+    return idx[~captured_mask], idx[captured_mask]
+
+
+# ---------------------------------------------------------------------------
 # Video assembly
 # ---------------------------------------------------------------------------
 

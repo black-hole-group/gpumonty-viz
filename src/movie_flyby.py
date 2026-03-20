@@ -301,7 +301,7 @@ def main():
         step       = max(1, int(t * max_step / n_frames))
         frame_path = os.path.join(args.frame_dir, f"frame_{t:04d}.png")
 
-        cyan_lines, gold_lines = geodesics_to_polydata_at_step(
+        cyan_lines, gold_lines, _ = geodesics_to_polydata_at_step(
             r_all, th_all, ph_all, nsteps, idx, r_max, step,
             follow_idx=follow_idx,
         )
