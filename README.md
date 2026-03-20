@@ -152,6 +152,7 @@ python src/movie_flyby.py [dump] [options]
 | `--window-size N` | 1024 | Frame resolution in pixels (square) |
 | `--tube-radius R` | 0.07 | Base geodesic tube radius in r_g (gold is 2×) |
 | `--slow-frame-threshold SECS` | 8.0 | Stop early if a frame exceeds this many seconds |
+| `--color-captured` | — | Color captured (horizon-crossing) geodesics in crimson instead of cyan |
 
 The camera sweeps a circular arc at constant distance and elevation above the midplane, always pointing at the origin. Geodesics progressively build up frame-by-frame as in `movie_static.py`.
 

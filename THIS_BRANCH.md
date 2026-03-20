@@ -1,0 +1,1 @@
+Colours geodesics that get trapped within the photon capture radius with red. Interesting to visualize the geodesics that comprise the black hole shadow.
